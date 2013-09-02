@@ -18,19 +18,24 @@
 
 import usb
 
-USB4ALL_VENDOR        = 0x04d8
-USB4ALL_PRODUCT       = 0x000c
-USB4ALL_CONFIGURATION = 1
-USB4ALL_INTERFACE     = 0
+ROBO_USB_VENDOR_ID      = 0x146a
+ROBO_IF_USB_PRODUCT_ID  = 0x0001
+ROBO_IOE_USB_PRODUCT_ID = 0x0002
+ROBO_RFD_USB_PRODUCT_ID = 0x0003
+ROBO_SAL_USB_PRODUCT_ID = 0x0005 # sound + lights
 
-ADMIN_MODULE_IN_ENDPOINT = 0x01
-ADMIN_MODULE_OUT_ENDPOINT = 0x81
+ROBO_CONFIGURATION = 1
+ROBO_INTERFACE     = 0
 
-READ_HEADER_SIZE      = 3
+#esto no es al reves?
+ROBO_IF_OUT_EP = 0x01
+ROBO_IF_IN_EP  = 0x81
 
 TIMEOUT = 250
 
 ERROR = -1
+
+
 
 class usb_device():
 
@@ -44,19 +49,19 @@ class usb_device():
 
     def open_device(self):
         """
-        Open the baseboard, configure the interface
+        Open the device, configure the interface
         """
         try:
-            if self.dev.is_kernel_driver_active(USB4ALL_INTERFACE):
-                self.dev.detach_kernel_driver(USB4ALL_INTERFACE)
-            self.dev.set_configuration(USB4ALL_CONFIGURATION)
+            if self.dev.is_kernel_driver_active(ROBO_INTERFACE):
+                self.dev.detach_kernel_driver(ROBO_INTERFACE)
+            self.dev.set_configuration(ROBO_CONFIGURATION)
         except usb.USBError, err:
             self._debug('ERROR:com_usb:open_device', err)
             raise
 
     def close_device(self):
         """
-        Close the comunication with the baseboard
+        Close the comunication
         """
         self.dev = None
 
@@ -65,7 +70,7 @@ class usb_device():
         Read from the device length bytes
         """
         try:
-            return self.dev.read(ADMIN_MODULE_OUT_ENDPOINT, size, USB4ALL_INTERFACE, TIMEOUT)
+            return self.dev.read(ROBO_IF_OUT_EP, size, ROBO_INTERFACE, TIMEOUT)
         except Exception, err:
             self._debug('ERROR:com_usb:read', err)
             raise
@@ -75,7 +80,7 @@ class usb_device():
         Write in the device: data
         """
         try:
-            return self.dev.write(ADMIN_MODULE_IN_ENDPOINT, data, USB4ALL_INTERFACE, TIMEOUT)
+            return self.dev.write(ROBO_IF_IN_EP, data, ROBO_INTERFACE, TIMEOUT)
         except Exception, err:
             self._debug('ERROR:com_usb:write', err)
             raise
@@ -89,25 +94,12 @@ class usb_device():
         else:
             return None
 
-    def get_info(self):
-        """
-        Get the device info such as manufacturer, etc
-        """
-        try:
-            names = usb.util.get_string(self.dev, 255, 1, None).encode('ascii')
-            copy = usb.util.get_string(self.dev, 255, 2, None).encode('ascii')
-            sn = usb.util.get_string(self.dev, 255, 3, None).encode('ascii')
-            return [names, copy, sn]
-        except Exception, err:
-            self._debug('ERROR:com_usb:get_info', err)
-            raise
-
 def find():
     """
     List all busses and returns a list of baseboards detected
     """
     l = []
-    for b in usb.core.find(find_all=True, idVendor=USB4ALL_VENDOR, idProduct=USB4ALL_PRODUCT):
+    for b in usb.core.find(find_all=True, idVendor=ROBO_USB_VENDOR_ID):
         l.append(usb_device(b))
     return l
 
