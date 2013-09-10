@@ -94,6 +94,19 @@ class usb_device():
         else:
             return None
 
+    def get_info(self):
+        """
+        Get the device info such as manufacturer, etc
+        """
+        try:
+            names = usb.util.get_string(self.dev, 255, 1, None).encode('ascii')
+            copy = usb.util.get_string(self.dev, 255, 2, None).encode('ascii')
+            sn = usb.util.get_string(self.dev, 255, 3, None).encode('ascii')
+            return [names, copy, sn]
+        except Exception, err:
+            self._debug('ERROR:com_usb:get_info', err)
+            raise
+
 def find():
     """
     List all busses and returns a list of baseboards detected
