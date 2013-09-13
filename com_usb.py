@@ -18,11 +18,14 @@
 
 import usb
 
-ROBO_USB_VENDOR_ID      = 0x146a
+"""ROBO_USB_VENDOR_ID      = 0x146a
 ROBO_IF_USB_PRODUCT_ID  = 0x0001
 ROBO_IOE_USB_PRODUCT_ID = 0x0002
 ROBO_RFD_USB_PRODUCT_ID = 0x0003
-ROBO_SAL_USB_PRODUCT_ID = 0x0005 # sound + lights
+ROBO_SAL_USB_PRODUCT_ID = 0x0005 # sound + lights"""
+
+FISCHER_VENDOR_ID = 0x221d
+FISCHER_PRODUCT_ID = 0x1000
 
 ROBO_CONFIGURATION = 1
 ROBO_INTERFACE     = 0
@@ -69,21 +72,13 @@ class usb_device():
         """
         Read from the device length bytes
         """
-        try:
-            return self.dev.read(ROBO_IF_OUT_EP, size, ROBO_INTERFACE, TIMEOUT)
-        except Exception, err:
-            self._debug('ERROR:com_usb:read', err)
-            raise
+        return self.dev.read(ROBO_IF_OUT_EP, size, ROBO_INTERFACE, TIMEOUT)
  
     def write(self, data):
         """
         Write in the device: data
         """
-        try:
-            return self.dev.write(ROBO_IF_IN_EP, data, ROBO_INTERFACE, TIMEOUT)
-        except Exception, err:
-            self._debug('ERROR:com_usb:write', err)
-            raise
+        return self.dev.write(ROBO_IF_IN_EP, data, ROBO_INTERFACE, TIMEOUT)
 
     def get_address(self):
         """
@@ -112,7 +107,7 @@ def find():
     List all busses and returns a list of baseboards detected
     """
     l = []
-    for b in usb.core.find(find_all=True, idVendor=ROBO_USB_VENDOR_ID):
+    for b in usb.core.find(find_all=True, idVendor=FISCHER_VENDOR_ID, idProduct=FISCHER_PRODUCT_ID):
         l.append(usb_device(b))
     return l
 
