@@ -44,7 +44,7 @@ import os
 __author__ = 'Wander Lairson Costa'
 
 # Use Semantic Versioning, http://semver.org/
-version_info = (1, 0, 0, 'a4')
+version_info = (1, 0, 0, 'b1')
 __version__ = '%d.%d.%d%s' % version_info
 
 
@@ -54,7 +54,7 @@ __all__ = ['legacy', 'core', 'backend', 'util']
 def _setup_log():
     from usb import _debug
     logger = logging.getLogger('usb')
-    debug_level = os.getenv('PYUSB_DEBUG_LEVEL')
+    debug_level = os.getenv('PYUSB_DEBUG')
 
     if debug_level is not None:
         _debug.enable_tracing(True)
