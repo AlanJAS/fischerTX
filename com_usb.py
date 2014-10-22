@@ -18,23 +18,51 @@
 
 import usb
 
-"""ROBO_USB_VENDOR_ID      = 0x146a
-ROBO_IF_USB_PRODUCT_ID  = 0x0001
-ROBO_IOE_USB_PRODUCT_ID = 0x0002
-ROBO_RFD_USB_PRODUCT_ID = 0x0003
-ROBO_SAL_USB_PRODUCT_ID = 0x0005 # sound + lights"""
+import time
 
-FISCHER_VENDOR_ID = 0x221d
+RETARDO = 2
+
+t1 = [0x02,0x55,0x00,0x14,0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x00,0x00,0x00,
+      0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xe7,0x03]
+t2 = [0x02,0x55,0x00,0x18,0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x02,0x00,0x01,0x00,
+      0x06,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xdb,0x03]
+t3 = [0x02,0x55,0x00,0x18,0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x03,0x00,0x01,0x00,
+      0x07,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xd9,0x03]
+t4 = [0x0d,0x67,0x65,0x74,0x5f,0x73,0x65,0x72,0x5f,0x6e,0x75,0x6d,0x0d]
+
+#win 9e
+#linux a2
+
+p5 = [0x02,0x55,0x00,0x48,0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x00,0x00,0x00,
+      0x05,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x01,0x01,
+      0x81,0x81,0x81,0x81,0x81,0x81,0x81,0x81,0x01,0x01,0x01,0x01,0x00,0x00,0x00,0x00,
+      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xfb,0x9e,0x03]
+
+p6 = [0x02,0x55,0x00,0x44,0x02,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x02,0x00,0x02,0x00,
+      0x02,0x00,0x00,0x00,0x01]
+
+
+t5 = p5
+t6 = p6 + [0] * 51 + [0xff, 0xb2, 0x03]
+
+t5_p1 = t5[:64]
+t5_p2 = t5[64:]
+
+t6_p1 = t6[:64]
+t6_p2 = t6[64:]
+
+FISCHER_VENDOR_ID  = 0x221d
 FISCHER_PRODUCT_ID = 0x1000
 
 ROBO_CONFIGURATION = 1
-ROBO_INTERFACE     = 0
+ROBO_INTERFACE     = 1
 
-#esto no es al reves?
-ROBO_IF_OUT_EP = 0x01
-ROBO_IF_IN_EP  = 0x81
 
-TIMEOUT = 250
+ROBO_IF_OUT_EP = 0x82
+ROBO_IF_IN_EP  = 0x03
+
+TIMEOUT = 1000
 
 ERROR = -1
 
@@ -54,13 +82,9 @@ class usb_device():
         """
         Open the device, configure the interface
         """
-        try:
-            if self.dev.is_kernel_driver_active(ROBO_INTERFACE):
-                self.dev.detach_kernel_driver(ROBO_INTERFACE)
-            self.dev.set_configuration(ROBO_CONFIGURATION)
-        except usb.USBError, err:
-            self._debug('ERROR:com_usb:open_device', err)
-            raise
+        if self.dev.is_kernel_driver_active(ROBO_INTERFACE):
+            self.dev.detach_kernel_driver(ROBO_INTERFACE)
+        self.dev.set_configuration(ROBO_CONFIGURATION)
 
     def close_device(self):
         """
@@ -68,17 +92,25 @@ class usb_device():
         """
         self.dev = None
 
-    def read(self, size):
+    def read(self, size=128):
         """
         Read from the device length bytes
         """
-        return self.dev.read(ROBO_IF_OUT_EP, size, ROBO_INTERFACE, TIMEOUT)
+        try:
+            return self.dev.read(ROBO_IF_OUT_EP, size, TIMEOUT)
+        except Exception, err:
+            print err
+            return []
  
     def write(self, data):
         """
         Write in the device: data
         """
-        return self.dev.write(ROBO_IF_IN_EP, data, ROBO_INTERFACE, TIMEOUT)
+        #print '****************************************************************'
+        #print 'writting..', data
+        r = self.dev.write(ROBO_IF_IN_EP, data, TIMEOUT)
+        #print 'writed %d bytes' % r
+        return r
 
     def get_address(self):
         """
@@ -102,6 +134,57 @@ class usb_device():
             self._debug('ERROR:com_usb:get_info', err)
             raise
 
+    def get_serial_number(self):
+        print 'getting serial number...'
+        b.write(t4)
+        time.sleep(RETARDO)
+        # 59 bytes?
+        l = b.read()
+        print l
+        if len(l) > 41:
+            
+            serie = ''.join(chr(s) for s in l[31:41])
+            print serie
+            return serie
+        return ''
+
+    def get_name(self):
+        print 'getting name...'
+        b.write(t4)
+        l = b.read()
+        print l
+        name = ''
+        if len(l) > 41:
+            name = l[2:13]
+            name = ''.join(s for s in name)
+            print name
+            return name
+        return ''  
+
+    def get_mac_address(self):
+        print 'getting mac address...'
+        b.write(t3)
+        l = b.read(128)
+        print 'mac mes', l
+        #mac = ''
+         
+            
+    
+        mac = ''.join(hex(c) for c in l)
+        print mac
+        return mac
+
+    def update_byte(self, b, o1, o2):
+        global t2, t3, t6
+        
+        t2[14] = b
+        t3[14] = b
+
+        t2[29] = o1
+        t3[29] = o2
+
+        t6[14] = b + 1
+
 def find():
     """
     List all busses and returns a list of baseboards detected
@@ -110,4 +193,107 @@ def find():
     for b in usb.core.find(find_all=True, idVendor=FISCHER_VENDOR_ID, idProduct=FISCHER_PRODUCT_ID):
         l.append(usb_device(b))
     return l
+
+
+
+if __name__ == "__main__":
+    print len(t1), t1
+    print len(t2), t2
+    print len(t3), t3
+    print len(t4), t4
+    print len(t5), t5
+    print len(t6), t6
+    
+    
+    l = find()
+    b = l[0]
+    print 'opening...'
+    b.open_device()
+
+    b.dev.reset()
+    time.sleep(RETARDO)
+    print 'primer mensaje'
+    b.write(t1)
+    first = b.read()
+    print 'len first', len(first)
+    if len(first) > 14:
+        print first
+        ff = first[14]
+        print 'first',  ff
+        
+        mn = first[25]
+        ts1 = (mn + 0x5a) % 256
+        ts2 = (mn + 0x58) % 256
+        b.update_byte(ff, ts1, ts2)
+        
+    print 'salida t6', t6
+
+    time.sleep(RETARDO)
+    b.write(t2)
+    b.read()
+
+    time.sleep(RETARDO)
+    b.get_mac_address()
+
+    time.sleep(RETARDO)
+    b.get_serial_number()
+
+    
+    print 'quinto'
+    time.sleep(RETARDO)
+    b.write(t5)
+    #time.sleep(1)
+    #b.write(t5_p2)
+    time.sleep(RETARDO)
+    print 'leyendo 5..'
+    ret =  b.read()
+    print ret
+    print 'hay que mandar', ret[14]
+
+    print 'el especial', ret[-2]
+    t6[-2] = ret[-2] + 0x3b
+    
+    time.sleep(RETARDO) 
+
+
+
+    print 'sexto'
+    while True:
+        #time.sleep(RETARDO)
+        print 'enviando', t6
+        b.write(t6_p1)
+        b.write(t6_p2)
+        t6[-2] = t6[-2] - 1
+        if t6[-2] == -1:
+            t6[-2] = 255
+            t6[-3] = t6[-3] - 1
+            
+
+        t6[12] = t6[12] + 1
+        if t6[12] == 256:
+            t6[12] = 0
+            t6[13] = t6[13] + 1
+            t6[-2] = t6[-2] - 1
+
+        t6_p1 = t6[:64]
+        t6_p2 = t6[64:]
+
+        
+
+        #print 't6', t6
+        #time.sleep(RETARDO)
+        #print 'reading 6..'
+        #p1 = b.read() 
+        #time.sleep(RETARDO)
+        p2 = b.read()
+        #print 'salida', p2[44:]
+        #print 'p1', p1
+        print 'recibiendo', p2
+
+
+
+
+
+    
+
 
