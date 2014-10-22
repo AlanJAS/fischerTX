@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2013 Wander Lairson Costa
+# Copyright (C) 2009-2014 Wander Lairson Costa
 #
 # The following terms apply to all files associated
 # with the software unless explicitly disclaimed in individual files.
@@ -33,6 +33,8 @@ This package exports the following modules and subpackages:
     core - the main USB implementation
     legacy - the compatibility layer with 0.x version
     backend - the support for backend implementations.
+    control - USB standard control requests.
+    libloader - helper module for backend library loading.
 
 Since version 1.0, main PyUSB implementation lives in the 'usb.core'
 module. New applications are encouraged to use it.
@@ -44,12 +46,10 @@ import os
 __author__ = 'Wander Lairson Costa'
 
 # Use Semantic Versioning, http://semver.org/
-version_info = (1, 0, 0, 'b1')
+version_info = (1, 0, 0, 'rc1')
 __version__ = '%d.%d.%d%s' % version_info
 
-
-__all__ = ['legacy', 'core', 'backend', 'util']
-
+__all__ = ['legacy', 'control', 'core', 'backend', 'util', 'libloader']
 
 def _setup_log():
     from usb import _debug
@@ -92,6 +92,6 @@ def _setup_log():
 
 _setup_log()
 
-# We import all 'legacy' module symbols to provide compatility
+# We import all 'legacy' module symbols to provide compatibility
 # with applications that use 0.x versions.
 from usb.legacy import *

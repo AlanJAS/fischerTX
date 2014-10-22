@@ -1,8 +1,8 @@
-# Copyright (C) 2009-2013 Wander Lairson Costa 
-# 
+# Copyright (C) 2009-2014 Wander Lairson Costa
+#
 # The following terms apply to all files associated
 # with the software unless explicitly disclaimed in individual files.
-# 
+#
 # The authors hereby grant permission to use, copy, modify, distribute,
 # and license this software and its documentation for any purpose, provided
 # that existing copyright notices are retained in all copies and that this
@@ -12,13 +12,13 @@
 # and need not follow the licensing terms described here, provided that
 # the new terms are clearly indicated on the first page of each file where
 # they apply.
-# 
+#
 # IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY
 # FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
 # ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
 # DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
 # INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE
@@ -96,7 +96,7 @@ def get_status(dev, recipient = None):
     sent to.
 
     The recipient can be None (on which the status will be queried
-    on the device), an Interface or Endpoint descriptors.
+    from the device), an Interface or Endpoint descriptors.
 
     The status value is returned as an integer with the lower
     word being the two bytes status value.
@@ -117,13 +117,16 @@ def clear_feature(dev, feature, recipient = None):
     feature is the feature you want to disable.
 
     The recipient can be None (on which the status will be queried
-    on the device), an Interface or Endpoint descriptors.
+    from the device), an Interface or Endpoint descriptors.
     """
-    bmRequestType, wIndex = _parse_recipient(recipient, util.CTRL_OUT)
-    dev.ctrl_transfer(bmRequestType = bmRequestType,
-                      bRequest = 0x01,
-                      wIndex = wIndex,
-                      wValue = feature)
+    if feature == ENDPOINT_HALT:
+        dev.clear_halt(recipient)
+    else:
+        bmRequestType, wIndex = _parse_recipient(recipient, util.CTRL_OUT)
+        dev.ctrl_transfer(bmRequestType = bmRequestType,
+                          bRequest = 0x01,
+                          wIndex = wIndex,
+                          wValue = feature)
 
 def set_feature(dev, feature, recipient = None):
     r"""Set/enable a specific feature.
@@ -134,7 +137,7 @@ def set_feature(dev, feature, recipient = None):
     feature is the feature you want to enable.
 
     The recipient can be None (on which the status will be queried
-    on the device), an Interface or Endpoint descriptors.
+    from the device), an Interface or Endpoint descriptors.
     """
     bmRequestType, wIndex = _parse_recipient(recipient, util.CTRL_OUT)
     dev.ctrl_transfer(bmRequestType = bmRequestType,
@@ -156,18 +159,18 @@ def get_descriptor(dev, desc_size, desc_type, desc_index, wIndex = 0):
     it is zero.
     """
     wValue = desc_index | (desc_type << 8)
+
     bmRequestType = util.build_request_type(
                         util.CTRL_IN,
                         util.CTRL_TYPE_STANDARD,
-                        util.CTRL_RECIPIENT_DEVICE
-                    )
+                        util.CTRL_RECIPIENT_DEVICE)
+
     return dev.ctrl_transfer(
             bmRequestType = bmRequestType,
             bRequest = 0x06,
             wValue = wValue,
             wIndex = wIndex,
-            data_or_wLength = desc_size
-        )
+            data_or_wLength = desc_size)
 
 def set_descriptor(dev, desc, desc_type, desc_index, wIndex = None):
     r"""Update an existing descriptor or add a new one.
@@ -182,18 +185,18 @@ def set_descriptor(dev, desc, desc_type, desc_index, wIndex = None):
     it is zero.
     """
     wValue = desc_index | (desc_type << 8)
+
     bmRequestType = util.build_request_type(
                         util.CTRL_OUT,
                         util.CTRL_TYPE_STANDARD,
-                        util.CTRL_RECIPIENT_DEVICE
-                    )
+                        util.CTRL_RECIPIENT_DEVICE)
+
     dev.ctrl_transfer(
         bmRequestType = bmRequestType,
         bRequest = 0x07,
         wValue = wValue,
         wIndex = wIndex,
-        data_or_wLength = desc
-    )
+        data_or_wLength = desc)
 
 def get_configuration(dev):
     r"""Get the current active configuration of the device.
@@ -208,13 +211,12 @@ def get_configuration(dev):
     bmRequestType = util.build_request_type(
                             util.CTRL_IN,
                             util.CTRL_TYPE_STANDARD,
-                            util.CTRL_RECIPIENT_DEVICE
-                        )
+                            util.CTRL_RECIPIENT_DEVICE)
+
     return dev.ctrl_transfer(
                 bmRequestType,
                 bRequest = 0x08,
-                data_or_wLength = 1
-            )[0]
+                data_or_wLength = 1)[0]
 
 def set_configuration(dev, bConfigurationNumber):
     r"""Set the current device configuration.
@@ -233,14 +235,13 @@ def get_interface(dev, bInterfaceNumber):
     bmRequestType = util.build_request_type(
                             util.CTRL_IN,
                             util.CTRL_TYPE_STANDARD,
-                            util.CTRL_RECIPIENT_INTERFACE
-                        )
+                            util.CTRL_RECIPIENT_INTERFACE)
+
     return dev.ctrl_transfer(
                 bmRequestType = bmRequestType,
                 bRequest = 0x0a,
                 wIndex = bInterfaceNumber,
-                data_or_wLength = 1
-            )[0]
+                data_or_wLength = 1)[0]
 
 def set_interface(dev, bInterfaceNumber, bAlternateSetting):
     r"""Set the alternate setting of the interface.

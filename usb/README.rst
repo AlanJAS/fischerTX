@@ -15,17 +15,18 @@ API rich, backend neutral Python USB module easy to use.
 As with most Python modules, PyUSB's documentation is based on Python
 doc strings and can therefore be manipulated by tools such as pydoc.
 
-You can also find a tutorial at: http://pyusb.sourceforge.net/docs/1.0/tutorial.html.
+You can also find a tutorial at:
+https://github.com/walac/pyusb/blob/master/docs/tutorial.rst.
 
-PyUSB is being developed and tested in Linux and Windows, but it should work
-fine in any platform running Python >= 2.4, ctypes and at least one of the
+PyUSB is being developed and tested on Linux and Windows, but it should work
+fine on any platform running Python >= 2.4, ctypes and at least one of the
 builtin backends.
 
 PyUSB supports libusb 0.1, libusb 1.0 and OpenUSB, but the user does not need
 to worry about that, unless in some corner cases.
 
 If you have any question about PyUSB, you can use the PyUSB mailing list
-hosted in the SourceForge. In the PyUSB website (http://pyusb.sourceforge.net)
+hosted in the SourceForge. In the PyUSB website (http://walac.github.io/pyusb)
 you can find instructions on how to subscribe to the mailing list.
 
 Installing PyUSB on GNU/Linux Systems
@@ -38,12 +39,12 @@ You will first need to install the following packages:
 
 1) python (PyUSB is useless without it), version >= 2.4
 2) At least one of the supported libraries (libusb 1.0, libusb 0.1 or OpenUSB)
-3) If your Python version is < 2.5, you have to install ctypes as a separate package,
-   because these versions of Python does not ship it.
+3) If your Python version is < 2.5, you have to install ctypes as a separate
+   package, because these versions of Python does not ship it.
 
 For example, the command::
 
-    $ sudo apt-get install python libusb
+    $ sudo apt-get install python libusb-1.0-0
 
 should install all these packages on most Debian-based systems with
 access to the proper package repositories.

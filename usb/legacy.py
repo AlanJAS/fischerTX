@@ -1,8 +1,8 @@
-# Copyright (C) 2009-2013 Wander Lairson Costa 
-# 
+# Copyright (C) 2009-2014 Wander Lairson Costa
+#
 # The following terms apply to all files associated
 # with the software unless explicitly disclaimed in individual files.
-# 
+#
 # The authors hereby grant permission to use, copy, modify, distribute,
 # and license this software and its documentation for any purpose, provided
 # that existing copyright notices are retained in all copies and that this
@@ -12,13 +12,13 @@
 # and need not follow the licensing terms described here, provided that
 # the new terms are clearly indicated on the first page of each file where
 # they apply.
-# 
+#
 # IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY
 # FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
 # ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
 # DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
 # INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE
@@ -116,7 +116,7 @@ class Configuration(object):
     r"""Configuration descriptor object."""
     def __init__(self, cfg):
         self.iConfiguration = cfg.iConfiguration
-        self.maxPower = cfg.bMaxPower << 2
+        self.maxPower = cfg.bMaxPower << 1
         self.remoteWakeup = (cfg.bmAttributes >> 5) & 1
         self.selfPowered = (cfg.bmAttributes >> 6) & 1
         self.totalLength = cfg.wTotalLength
@@ -133,7 +133,11 @@ class Configuration(object):
 class DeviceHandle(object):
     def __init__(self, dev):
         self.dev = dev
-        self.__claimed_interface = -1
+        self.__claimed_interface = None
+
+    def __del__(self):
+        util.dispose_resources(self.dev)
+        self.dev = None
 
     def bulkWrite(self, endpoint, buffer, timeout = 100):
         r"""Perform a bulk write request to the endpoint specified.
@@ -145,7 +149,7 @@ class DeviceHandle(object):
                 timeout: operation timeout in miliseconds. (default: 100)
                          Returns the number of bytes written.
         """
-        return self.dev.write(endpoint, buffer, self.__claimed_interface, timeout)
+        return self.dev.write(endpoint, buffer, timeout)
 
     def bulkRead(self, endpoint, size, timeout = 100):
         r"""Performs a bulk read request to the endpoint specified.
@@ -156,7 +160,7 @@ class DeviceHandle(object):
                 timeout: operation timeout in miliseconds. (default: 100)
             Return a tuple with the data read.
         """
-        return self.dev.read(endpoint, size, self.__claimed_interface, timeout)
+        return self.dev.read(endpoint, size, timeout)
 
     def interruptWrite(self, endpoint, buffer, timeout = 100):
         r"""Perform a interrupt write request to the endpoint specified.
@@ -168,7 +172,7 @@ class DeviceHandle(object):
                 timeout: operation timeout in miliseconds. (default: 100)
                          Returns the number of bytes written.
         """
-        return self.dev.write(endpoint, buffer, self.__claimed_interface, timeout)
+        return self.dev.write(endpoint, buffer, timeout)
 
     def interruptRead(self, endpoint, size, timeout = 100):
         r"""Performs a interrupt read request to the endpoint specified.
@@ -179,7 +183,7 @@ class DeviceHandle(object):
                 timeout: operation timeout in miliseconds. (default: 100)
             Return a tuple with the data read.
         """
-        return self.dev.read(endpoint, size, self.__claimed_interface, timeout)
+        return self.dev.read(endpoint, size, timeout)
 
     def controlMsg(self, requestType, request, buffer, value = 0, index = 0, timeout = 100):
         r"""Perform a control request to the default control pipe on a device.
@@ -188,7 +192,7 @@ class DeviceHandle(object):
             requestType: specifies the direction of data flow, the type
                          of request, and the recipient.
             request: specifies the request.
-            buffer: if the transfer is a write transfer, buffer is a sequence 
+            buffer: if the transfer is a write transfer, buffer is a sequence
                     with the transfer data, otherwise, buffer is the number of
                     bytes to read.
             value: specific information to pass to the device. (default: 0)
@@ -202,8 +206,7 @@ class DeviceHandle(object):
                     wValue = value,
                     wIndex = index,
                     data_or_wLength = buffer,
-                    timeout = timeout
-                )
+                    timeout = timeout)
 
     def clearHalt(self, endpoint):
         r"""Clears any halt status on the specified endpoint.
@@ -211,10 +214,7 @@ class DeviceHandle(object):
         Arguments:
             endpoint: endpoint number.
         """
-        cfg = self.dev.get_active_configuration()
-        intf = util.find_descriptor(cfg, bInterfaceNumber = self.__claimed_interface)
-        e = util.find_descriptor(intf, bEndpointAddress = endpoint)
-        control.clear_feature(self.dev, control.ENDPOINT_HALT, e)
+        self.dev.clear_halt(endpoint)
 
     def claimInterface(self, interface):
         r"""Claims the interface with the Operating System.
@@ -270,11 +270,11 @@ class DeviceHandle(object):
 
         Arguments:
             index: index of descriptor in the device.
-            length: number of bytes of the string
+            length: number of bytes of the string (ignored)
             langid: Language ID. If it is omittedi, will be
                     used the first language.
         """
-        return util.get_string(self.dev, length, index, langid).encode('ascii')
+        return util.get_string(self.dev, index, langid).encode('ascii')
 
     def getDescriptor(self, desc_type, desc_index, length, endpoint = -1):
         r"""Retrieves a descriptor from the device identified by the type

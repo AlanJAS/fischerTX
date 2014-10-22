@@ -1,8 +1,8 @@
-# Copyright (C) 2009-2013 Wander Lairson Costa 
-# 
+# Copyright (C) 2009-2014 Wander Lairson Costa
+#
 # The following terms apply to all files associated
 # with the software unless explicitly disclaimed in individual files.
-# 
+#
 # The authors hereby grant permission to use, copy, modify, distribute,
 # and license this software and its documentation for any purpose, provided
 # that existing copyright notices are retained in all copies and that this
@@ -12,13 +12,13 @@
 # and need not follow the licensing terms described here, provided that
 # the new terms are clearly indicated on the first page of each file where
 # they apply.
-# 
+#
 # IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY
 # FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
 # ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
 # DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
 # INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE
@@ -33,7 +33,7 @@ This module exports:
 IBackend - backend interface.
 
 Backends are Python objects which implement the IBackend interface.
-The easiest way to do so is inherinting from IBackend. 
+The easiest way to do so is inherinting from IBackend.
 
 PyUSB already provides backends for libusb versions 0.1 and 1.0,
 and OpenUSB library. Backends modules included with PyUSB are required to
@@ -87,10 +87,11 @@ class IBackend(object):
     necessary.
 
     As Python is a dynamic typed language, you are not obligated to inherit from
-    IBackend: everything that bahaves like an IBackend is an IBackend. But you
+    IBackend: everything that behaves like an IBackend is an IBackend. But you
     are strongly recommended to do so, inheriting from IBackend provides consistent
     default behavior.
     """
+
     def enumerate_devices(self):
         r"""This function is required to return an iterable object which
         yields an implementation defined device identification for each
@@ -120,7 +121,7 @@ class IBackend(object):
         fields acessible as member variables. They must be convertible (but
         not required to be equal) to the int type.
 
-        The dev parameter is the already described device identification object.
+        The dev parameter is the device identification object.
         config is the logical index of the configuration (not the bConfigurationValue
         field).  By "logical index" we mean the relative order of the configurations
         returned by the peripheral as a result of GET_DESCRIPTOR request.
@@ -134,7 +135,7 @@ class IBackend(object):
         fields accessible as member variables. They must be convertible (but
         not required to be equal) to the int type.
 
-        The dev parameter is the already described device identification object.
+        The dev parameter is the device identification object.
         The intf parameter is the interface logical index (not the bInterfaceNumber field)
         and alt is the alternate setting logical index (not the bAlternateSetting value).
         Not every interface has more than one alternate setting.  In this case, the alt
@@ -151,7 +152,7 @@ class IBackend(object):
         not required to be equal) to the int type.
 
         The ep parameter is the endpoint logical index (not the bEndpointAddress
-        field) of the endpoint descriptor desired. intf, alt and config are the same
+        field) of the endpoint descriptor desired. dev, intf, alt and config are the same
         values already described in the get_interface_descriptor() method.
         """
         _not_implemented(self.get_endpoint_descriptor)
@@ -162,7 +163,7 @@ class IBackend(object):
         This method opens the device identified by the dev parameter for communication.
         This method must be called before calling any communication related method, such
         as transfer methods.
-        
+
         It returns a handle identifying the communication instance. This handle must be
         passed to the communication methods.
         """
@@ -202,7 +203,7 @@ class IBackend(object):
 
         This method should only be called when the interface has more than
         one alternate setting. The dev_handle is the value returned by the
-        open_device() method. intf and altsetting are respectivelly the 
+        open_device() method. intf and altsetting are respectivelly the
         bInterfaceNumber and bAlternateSetting fields of the related interface.
         """
         _not_implemented(self.set_interface_altsetting)
@@ -243,17 +244,18 @@ class IBackend(object):
         """
         _not_implemented(self.bulk_write)
 
-    def bulk_read(self, dev_handle, ep, intf, size, timeout):
+    def bulk_read(self, dev_handle, ep, intf, buff, timeout):
         r"""Perform a bulk read.
 
         dev_handle is the value returned by the open_device() method.
         The ep parameter is the bEndpointAddress field whose endpoint
         the data will be received from. intf is the bInterfaceNumber field
-        of the interface containing the endpoint. The size parameter
-        is the number of bytes to be read.  The timeout parameter specifies
-        a time limit to the operation in miliseconds.
+        of the interface containing the endpoint. The buff parameter
+        is the buffer to receive the data read, the length of the buffer
+        tells how many bytes should be read. The timeout parameter
+        specifies a time limit to the operation in miliseconds.
 
-        The method returns an array.array object containing the data read.
+        The method returns the number of bytes actually read.
         """
         _not_implemented(self.bulk_read)
 
@@ -278,11 +280,12 @@ class IBackend(object):
         dev_handle is the value returned by the open_device() method.
         The ep parameter is the bEndpointAddress field whose endpoint
         the data will be received from. intf is the bInterfaceNumber field
-        of the interface containing the endpoint. The size parameter
-        is the number of bytes to be read.  The timeout parameter specifies
-        a time limit to the operation in miliseconds.
+        of the interface containing the endpoint. The buff parameter
+        is the buffer to receive the data read, the length of the buffer
+        tells how many bytes should be read.  The timeout parameter
+        specifies a time limit to the operation in miliseconds.
 
-        The method returns an array.array object containing the data read.
+        The method returns the number of bytes actually read.
         """
         _not_implemented(self.intr_read)
 
@@ -293,7 +296,7 @@ class IBackend(object):
         The ep parameter is the bEndpointAddress field whose endpoint
         the data will be sent to. intf is the bInterfaceNumber field
         of the interface containing the endpoint. The data parameter
-        is the data to be sent.It must be an instance of the array.array
+        is the data to be sent. It must be an instance of the array.array
         class. The timeout parameter specifies a time limit to the operation
         in miliseconds.
 
@@ -307,11 +310,12 @@ class IBackend(object):
         dev_handle is the value returned by the open_device() method.
         The ep parameter is the bEndpointAddress field whose endpoint
         the data will be received from. intf is the bInterfaceNumber field
-        of the interface containing the endpoint. The size parameter
-        is the number of bytes to be read. The timeout parameter specifies
+        of the interface containing the endpoint. The buff parameter
+        is buffer to receive the data read, the length of the buffer tells
+        how many bytes should be read. The timeout parameter specifies
         a time limit to the operation in miliseconds.
 
-        The method returns an array.array object containing the data read.
+        The method returns the number of bytes actually read.
         """
         _not_implemented(self.iso_read)
 
@@ -321,7 +325,7 @@ class IBackend(object):
                       bRequest,
                       wValue,
                       wIndex,
-                      data_or_wLength,
+                      data,
                       timeout):
         r"""Perform a control transfer on the endpoint 0.
 
@@ -330,17 +334,21 @@ class IBackend(object):
 
         dev_handle is the value returned by the open_device() method.
         bmRequestType, bRequest, wValue and wIndex are the same fields
-        of the setup packet. data_or_wLength is either the payload to be sent
-        to the device, if any, as an array.array object (None there is no
-        payload) for OUT requests in the data stage or the wLength field
-        specifying the number of bytes to read for IN requests in the data
-        stage. The timeout parameter specifies a time limit to the operation
-        in miliseconds.
+        of the setup packet. data is an array object, for OUT requests
+        it contains the bytes to transmit in the data stage and for
+        IN requests it is the buffer to hold the data read. The number
+        of bytes requested to transmit or receive is equal to the length
+        of the array times the data.itemsize field. The timeout parameter
+        specifies a time limit to the operation in miliseconds.
 
         Return the number of bytes written (for OUT transfers) or the data
         read (for IN transfers), as an array.array object.
         """
         _not_implemented(self.ctrl_transfer)
+
+    def clear_halt(self, dev_handle, ep):
+        r"""Clear the halt/stall condition for the endpoint."""
+        _not_implemented(self.clear_halt)
 
     def reset_device(self, dev_handle):
         r"""Reset the device."""
@@ -356,7 +364,7 @@ class IBackend(object):
 
     def detach_kernel_driver(self, dev_handle, intf):
         r"""Detach a kernel driver from an interface.
-        
+
         If successful, you will then be able to claim the interface
         and perform I/O.
         """
