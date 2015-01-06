@@ -275,51 +275,27 @@ if __name__ == "__main__":
 
     print ret
 
-
-    """b.write(t6_p1)
-    b.write(t6_p2)
-    t6[-2] = t6[-2] - 1
-    t6[12] = t6[12] + 1
-    ret =  b.read()
-    print ret
-    t6_p1 = t6[:64]
-    t6_p2 = t6[64:]
-    b.write(t6_p1)
-    b.write(t6_p2)
-    ret =  b.read()
-    print ret
     
-    while False:
+    while True:
         #time.sleep(RETARDO)
-        print 'enviando', t6
-        b.write(t6_p1)
-        b.write(t6_p2)
-        t6[-2] = t6[-2] - 1
-        if t6[-2] == -1:
-            t6[-2] = 255
-            t6[-3] = t6[-3] - 1
+        print 'enviando', t7
+        b.write(t7)
+        t7[-2] = t7[-2] - 1
+        if t7[-2] == -1:
+            t7[-2] = 255
+            t7[-3] = t7[-3] - 1
             
 
-        t6[12] = t6[12] + 1
-        if t6[12] == 256:
-            t6[12] = 0
-            t6[13] = t6[13] + 1
-            t6[-2] = t6[-2] - 1
+        t7[12] = t7[12] + 1
+        if t7[12] == 256:
+            t7[12] = 0
+            t7[13] = t7[13] + 1
+            t7[-2] = t7[-2] - 1
 
-        t6_p1 = t6[:64]
-        t6_p2 = t6[64:]
 
-        
-
-        #print 't6', t6
-        #time.sleep(RETARDO)
-        #print 'reading 6..'
-        #p1 = b.read() 
-        #time.sleep(RETARDO)
         p2 = b.read()
-        #print 'salida', p2[44:]
-        #print 'p1', p1
-        print 'recibiendo', p2"""
+
+        print 'recibiendo', p2
 
 
 
