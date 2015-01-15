@@ -138,10 +138,12 @@ class usb_device():
  
     def write(self, data):
         #print '****************************************************************'
-        #print 'writting..', data
-        r = self.dev.write(ROBO_IF_IN_EP, data, TIMEOUT)
-        #print 'writed %d bytes' % r
-        return r
+        print 'writting..', data
+        h, l = self.calculate_CRC(data)
+        data[-3] = h
+        data[-2] = l
+        return self.dev.write(ROBO_IF_IN_EP, data, TIMEOUT)
+
 
     def get_address(self):
         if self.dev is not None:
@@ -215,6 +217,17 @@ class usb_device():
 
         t7[14] = b + 1
 
+
+    def calculate_CRC(self, msg):
+        s = 0
+        msg = msg[2:-3]
+        for b in msg:
+            s = s + b
+        c = 65535 - s + 1
+        h = c / 256
+        l = c % 256
+        return h, l
+
 def find():
     """
     List all busses and returns a list of baseboards detected
@@ -246,6 +259,7 @@ if __name__ == "__main__":
     time.sleep(RETARDO)
     print 'primer mensaje'
     b.write(t1)
+    
     first = b.read()
     print 'len first', len(first)
     if len(first) > 14:
@@ -265,6 +279,7 @@ if __name__ == "__main__":
 
 
     b.write(t3)
+    
     print b.read()
 
     time.sleep(RETARDO)
@@ -279,9 +294,9 @@ if __name__ == "__main__":
     print 'leyendo 5..'
     ret =  b.read()
     print ret
-    print 'hay que mandar', ret[14], hex(ret[14])
+    print 'hay que mandar', ret[14] + 2, hex(ret[14] + 2)
 
-    t6[14] = ret[14]
+    t6[14] = ret[14] + 2
 
     print 'el especial', ret[-2]
     t6[-2] = ret[-2] + 0x3b
@@ -291,8 +306,6 @@ if __name__ == "__main__":
 
 
     print 'sexto'
-    print t6
-   
     b.write(t6)
     print 'respuesta 6'
     ret =  b.read()
@@ -306,10 +319,10 @@ if __name__ == "__main__":
 
 
     print 'septimo'
-    print t7
-    print 'res'
+
+
     b.write(t7)
-    print 'afgeet'
+    print 'res 7'
     ret =  b.read()
 
     print ret
@@ -317,7 +330,7 @@ if __name__ == "__main__":
     
     while True:
         #time.sleep(RETARDO)
-        print 'enviando', t7
+        #print 'enviando', t7
         b.write(t7)
         t7[-2] = t7[-2] - 1
         if t7[-2] == -1:
@@ -333,10 +346,10 @@ if __name__ == "__main__":
 
 
         p2 = b.read()
-
+        
         print 'recibiendo', p2
 
-
+        print "\n"
 
 
 
