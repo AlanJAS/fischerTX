@@ -138,10 +138,11 @@ class usb_device():
  
     def write(self, data):
         #print '****************************************************************'
-        print 'writting..', data
-        h, l = self.calculate_CRC(data)
-        data[-3] = h
-        data[-2] = l
+        #print 'writting..', data
+        if data[0] = 0x02 and data[1] = 0x55:
+            h, l = self.calculate_CRC(data)
+            data[-3] = h
+            data[-2] = l
         return self.dev.write(ROBO_IF_IN_EP, data, TIMEOUT)
 
 
@@ -347,7 +348,7 @@ if __name__ == "__main__":
 
         p2 = b.read()
         
-        print 'recibiendo', p2
+        print  p2
 
         print "\n"
 
